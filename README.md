@@ -2,6 +2,53 @@
 [![Build Status](https://travis-ci.org/openzipkin/zipkin.svg?branch=master)](https://travis-ci.org/openzipkin/zipkin) [![Download](https://api.bintray.com/packages/openzipkin/maven/zipkin/images/download.svg) ](https://bintray.com/openzipkin/maven/zipkin/_latestVersion)
 [![Maven Central](https://img.shields.io/maven-central/v/io.zipkin/zipkin-server.svg)](https://search.maven.org/search?q=g:io.zipkin%20AND%20a:zipkin-server)
 
+# Deployment
+
+### How to build
+- Use `mvn -DskipTests --also-make -pl zipkin-server clean install`.
+
+### How to change setting (hardcode)
+Setting file   zipkin-dasboard -> zipkin-server -> main -> resource -> zipkin-server-shared.yml
+- change `type: ${STORAGE_TYPE:mysql}` for storage type that we want use. MySQL Storage = mysql,  In-Memory Storage = mem, Cassandra Storage=cassandra.
+- then change setting storage that we use, example if we use MySQL :
+```yaml
+mysql:
+          jdbc-url: ${MYSQL_JDBC_URL:}
+          host: ${MYSQL_HOST:dev.infosyssolusiterpadu.com}
+          port: ${MYSQL_TCP_PORT:3307}
+          username: ${MYSQL_USER:root}
+          password: ${MYSQL_PASS:password}
+          db: ${MYSQL_DB:zipkin}
+          max-active: ${MYSQL_MAX_CONNECTIONS:10}
+          use-ssl: ${MYSQL_USE_SSL:false}
+```
+
+
+Jar is in folder zipkin-dasboard -> zipkin-server ->  release
+- If want use defult setting (in memory storage) just run `java -jar zipkin-server-2.21.6-SNAPSHOT-exec.jar`
+- for other setting like if we want to use mysql use `STORAGE_TYPE=mysql MYSQL_HOST=HOST MYSQL_TCP_PORT=PORT MYSQL_USER=user MYSQL_PASS=pass  java -jar zipkin.jar`, elasticsearch  `STORAGE_TYPE=elasticsearch ES_HOSTS=http://myhost:9200 java -jar zipkin-server-2.21.6-SNAPSHOT-exec.jar `
+
+### Setting for service that use sleuth and zipkin
+- add dependency
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-zipkin</artifactId>
+			<version>2.2.2.RELEASE</version>
+		</dependency>
+- add properties `spring.zipkin.baseUrl=http://localhost:9412/`
+
+- add tags
+
+```java
+@Autowired
+    Tracer tracer;
+
+tracer.currentSpanCustomizer().tag("customBaggageId",ExtraFieldPropagation.get("customBaggageId"));
+```
+
+
+------------
+
 # zipkin
 [Zipkin](https://zipkin.io) is a distributed tracing system. It helps gather
 timing data needed to troubleshoot latency problems in service architectures.
